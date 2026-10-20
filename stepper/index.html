@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Algorithm Step-Through</title>
+<link rel="stylesheet" href="css/stepper.css">
+</head>
+<body>
+<div class="app">
+  <div class="brand">
+    <h1>Algorithm Step-Through</h1>
+    <p>Interview and Scaler problems in Java. Step through each one and watch the variables change. Source files are in <code>interview_challenges/</code>, <code>scaler/</code> and <code>AccentureQuestions/</code>.</p>
+  </div>
+  <nav id="nav" aria-label="Problems"></nav>
+  <main>
+    <div class="phead"><h2 id="ptitle"></h2><span id="plevel" class="pill"></span></div>
+    <p class="statement" id="pstate"></p>
+    <div class="meta" id="pmeta"></div>
+    <form class="inputs" id="pin" autocomplete="off"></form>
+    <div class="bench">
+      <div class="panel">
+        <header><span>Visual execution</span><span id="fileName"></span></header>
+        <div class="viz" id="viz"></div>
+        <div class="narr"><span class="stepno" id="stepno"></span><p id="msg"></p></div>
+        <div class="controls">
+          <button class="ico" id="bFirst" title="First step (Home)" aria-label="First step"><svg viewBox="0 0 16 16"><path d="M3 2h2v12H3zM14 2v12L6 8z"/></svg></button>
+          <button class="ico" id="bPrev" title="Previous step (←)" aria-label="Previous step"><svg viewBox="0 0 16 16"><path d="M11 2v12L3 8z"/></svg></button>
+          <button class="ico play" id="bPlay" title="Play / pause (space)" aria-label="Play"><svg viewBox="0 0 16 16" id="playIco"><path d="M4 2v12l10-6z"/></svg></button>
+          <button class="ico" id="bNext" title="Next step (→)" aria-label="Next step"><svg viewBox="0 0 16 16"><path d="M5 2v12l8-6z"/></svg></button>
+          <button class="ico" id="bLast" title="Last step (End)" aria-label="Last step"><svg viewBox="0 0 16 16"><path d="M11 2h2v12h-2zM2 2v12l8-6z"/></svg></button>
+          <input type="range" id="scrub" min="0" max="0" value="0" aria-label="Step">
+          <select id="speed" aria-label="Speed"><option value="1400">0.5×</option><option value="800" selected>1×</option><option value="380">2×</option><option value="150">4×</option></select>
+        </div>
+      </div>
+      <div class="side">
+        <div class="panel"><header><span>Java</span><span class="codehead"><span id="codeNote"></span><button type="button" class="copybtn" id="copyCode" aria-live="polite"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 1h8a2 2 0 0 1 2 2v8h-2V3H5zM1 5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2zm2 0v8h7V5z"/></svg><span id="copyLabel">Copy</span></button></span></header><pre class="code" id="code"></pre></div>
+        <div class="panel"><header><span>Variables</span></header><dl class="vars" id="vars"></dl></div>
+      </div>
+    </div>
+    <div class="explain">
+      <section><h3>The logic, step by step</h3><ol id="steps"></ol></section>
+      <section><h3>Why it's efficient</h3><table class="cmp" id="cmp"></table><p class="note" id="eff"></p></section>
+    </div>
+    <p class="runline" id="runline"></p>
+  </main>
+</div>
+
+<script src="js/helpers.js"></script>
+<script src="problems/manifest.js"></script>
+<script>
+/* Load every problem file listed in the manifest, then the engine. async=false keeps execution order. Works from file:// too. */
+(function () {
+  const files = (window.PROBLEM_FILES || []).concat(['js/engine.js']);
+  files.forEach(src => { const s = document.createElement('script'); s.src = src; s.async = false; s.onerror = () => console.error('Failed to load ' + src); document.body.appendChild(s); });
+})();
+</script>
+</body>
+</html>
