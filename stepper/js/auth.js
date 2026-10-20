@@ -162,15 +162,44 @@
     if (workbenchLoaded) return;
     workbenchLoaded = true;
     try {
-      await loadScript('js/helpers.js');
-      await loadScript('problems/manifest.js');
-      const files = (window.PROBLEM_FILES || []).concat(['js/engine.js']);
+      const v = Date.now();
+      await loadScript('js/helpers.js?v=' + v);
+      await loadScript('problems/manifest.js?v=' + v);
+      const files = (window.PROBLEM_FILES || []).map(f => f + '?v=' + v).concat(['js/engine.js?v=' + v]);
       // async=false keeps execution in order while downloading in parallel
       await Promise.all(files.map(loadScript));
     } catch (e) {
       console.error(e);
     }
   }
+
+  // Automatic live update detection: if user has a tab open,
+  // check if new problems/manifest updates were deployed and refresh automatically
+  async function checkForUpdates() {
+    if (!workbenchLoaded) return;
+    try {
+      const res = await fetch('problems/manifest.js?_chk=' + Date.now(), { cache: 'no-store' });
+      if (!res.ok) return;
+      const text = await res.text();
+      const matches = [...text.matchAll(/"([^"]+\.js)"/g)].map(m => m[1]);
+      if (matches.length && window.PROBLEM_FILES) {
+        const currentSet = new Set(window.PROBLEM_FILES);
+        const hasChange = matches.length !== window.PROBLEM_FILES.length || matches.some(f => !currentSet.has(f));
+        if (hasChange) {
+          console.log('[Code Coriander] Problem updates detected, reloading workbench...');
+          location.reload();
+        }
+      }
+    } catch (e) {
+      // Silently ignore network interruptions
+    }
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') checkForUpdates();
+  });
+  window.addEventListener('focus', checkForUpdates);
+  setInterval(checkForUpdates, 60000);
 
   function updateAuthState(user) {
     const defaultLanding = document.getElementById('defaultLanding');
