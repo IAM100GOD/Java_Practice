@@ -3,14 +3,96 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Algorithm Step-Through</title>
-<link rel="stylesheet" href="css/stepper.css">
+<title>Code Coriander • Algorithm Step-Through</title>
+<script>
+if (location.protocol === 'http:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+  location.replace('https://' + location.hostname + location.pathname + location.search + location.hash);
+}
+</script>
+<link rel="icon" type="image/svg+xml" href="img/logo.svg">
+<link rel="alternate icon" type="image/png" href="favicon.png">
+<link rel="stylesheet" href="css/stepper.css?v=5">
+<!-- Firebase App, Auth & Firestore SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
-<div class="app">
+
+<!-- ==================== DEFAULT PUBLIC VIEW (codecoriander.com) ==================== -->
+<div id="defaultLanding">
+  <nav class="landing-nav">
+    <a href="/" class="landing-brand">
+      <img src="img/logo.svg" alt="Code Coriander Logo" class="brand-logo" width="45" height="30" style="height:30px;width:auto;max-width:50px;object-fit:contain;vertical-align:middle;display:inline-block;flex-shrink:0;">
+      <span>Code Coriander</span>
+    </a>
+    <!-- Top Right: The ONLY Sign In option on the page -->
+    <div class="landing-nav-right">
+      <button type="button" id="landingLoginBtn" class="btn" onclick="window.loginWithGoogle()">
+        <svg class="g-ico" viewBox="0 0 24 24" style="width:16px;height:16px;"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/></svg>
+        Sign In
+      </button>
+    </div>
+  </nav>
+
+  <div class="landing-wrap">
+    <div class="landing-hero">
+      <div class="landing-eyebrow">Interactive Algorithmic Systems</div>
+      <h1 class="landing-title">Master Algorithms from <span>First Principles</span></h1>
+      <p class="landing-desc">
+        Code Coriander is an engineering platform designed for deep runtime inspection, memory models, and algorithmic problem-solving. Step through pointers, stacks, and state changes line-by-line.
+      </p>
+      <div style="display:flex; justify-content:center;">
+        <span style="display:inline-flex; align-items:center; gap:8px; font-size:.85rem; color:var(--muted); background:var(--surface-2); padding:6px 14px; border-radius:999px; border:1px solid var(--line);">
+          🔒 Private Workbench • Authorized Access via Google OAuth
+        </span>
+      </div>
+    </div>
+
+    <div class="landing-grid">
+      <div class="landing-card">
+        <div class="landing-card-icon">⚡</div>
+        <h3>Line-by-Line Execution</h3>
+        <p>Observe state mutations, recursive call stack frames, and array shifts interactively with variable tracking at every single line of code.</p>
+      </div>
+      <div class="landing-card">
+        <div class="landing-card-icon">🎯</div>
+        <h3>Curated Problem Suites</h3>
+        <p>Comprehensive problem suites covering core data structures, algorithmic paradigms, and mathematical problem-solving in modern Java.</p>
+      </div>
+      <div class="landing-card">
+        <div class="landing-card-icon">⏱️</div>
+        <h3>Asymptotic Proofs & Trade-offs</h3>
+        <p>Direct comparisons contrasting brute-force iterations with mathematical formulas, two-pointer sweeps, and monotonic stack optimizations.</p>
+      </div>
+    </div>
+
+    <div class="landing-preview-box">
+      <h4>Private Algorithmic Workbench</h4>
+      <p>The full execution engine, source files, and live tests are protected via Google OAuth. Click <strong>Sign In</strong> at the top right to access.</p>
+    </div>
+  </div>
+
+  <footer class="landing-footer">
+    Code Coriander • codecoriander.com • Authorized Access Only
+  </footer>
+</div>
+
+<!-- ==================== AUTHORIZED PRIVATE WORKBENCH ==================== -->
+<div class="app" id="stepperApp" style="display:none;">
   <div class="brand">
-    <h1>Algorithm Step-Through</h1>
-    <p>Interview and Scaler problems in Java. Step through each one and watch the variables change. Source files are in <code>interview_challenges/</code>, <code>scaler/</code> and <code>AccentureQuestions/</code>.</p>
+    <div style="display:flex;align-items:center;gap:14px;">
+      <img src="img/logo.svg" alt="Code Coriander" style="height:36px;width:auto;max-width:55px;object-fit:contain;vertical-align:middle;">
+      <div>
+        <h1>Algorithm Step-Through</h1>
+        <p>Interview and Scaler problems in Java. Step through each one and watch the variables change. Source files are in <code>interview_challenges/</code>, <code>scaler/</code> and <code>AccentureQuestions/</code>.</p>
+      </div>
+    </div>
+    <div class="user-badge">
+      <span class="user-dot"></span>
+      <span id="userEmailBadge" class="user-email"></span>
+      <button type="button" class="btn btn-sm btn-ghost" onclick="window.logout()" style="margin-left: 6px;">Sign Out</button>
+    </div>
   </div>
   <nav id="nav" aria-label="Problems"></nav>
   <main>
@@ -46,14 +128,9 @@
   </main>
 </div>
 
-<script src="js/helpers.js"></script>
-<script src="problems/manifest.js"></script>
-<script>
-/* Load every problem file listed in the manifest, then the engine. async=false keeps execution order. Works from file:// too. */
-(function () {
-  const files = (window.PROBLEM_FILES || []).concat(['js/engine.js']);
-  files.forEach(src => { const s = document.createElement('script'); s.src = src; s.async = false; s.onerror = () => console.error('Failed to load ' + src); document.body.appendChild(s); });
-})();
-</script>
+<!-- ==================== SCRIPTS ==================== -->
+<!-- Workbench scripts are lazy-loaded by auth.js after an authorized sign-in -->
+<script src="js/auth.js?v=5"></script>
+
 </body>
 </html>

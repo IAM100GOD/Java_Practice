@@ -1,4 +1,6 @@
-// Diagonal Difference (Accenture)
+// Matrix Diagonal Difference (Accenture)
+// Level: Easy | Topic: 2D Arrays / Matrices
+//
 // Given a square matrix of size N x N, calculate the absolute difference between the sums of
 // its primary diagonal and secondary diagonal.
 //

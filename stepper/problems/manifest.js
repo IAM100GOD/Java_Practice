@@ -22,6 +22,7 @@ window.PROBLEM_FILES = [
   "problems/AccentureQuestions/acc-next-smaller.js",
   "problems/AccentureQuestions/acc-password.js",
   "problems/AccentureQuestions/acc-rat-count.js",
+  "problems/AccentureQuestions/acc-rotate-matrix.js",
   "problems/AccentureQuestions/acc-second-even-odd.js",
   "problems/AccentureQuestions/acc-smallest-pair.js",
   "problems/AccentureQuestions/acc-toggle-bits.js",

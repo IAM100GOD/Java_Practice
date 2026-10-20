@@ -1,0 +1,57 @@
+rules_version = '2';
+
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: allowed_users
+// Document ID: email (lowercase, e.g. "sourabgowda@gmail.com")
+// Fields:
+//   - email: string (required) - email address of the authorized user
+//   - role: string (optional) - "admin", "viewer", etc.
+//   - active: bool (optional) - whether the user access is active
+//
+// Description:
+// Whitelisted user accounts authorized to access the Code Coriander
+// interactive algorithm workbench. Writes are disabled from client apps
+// and can only be managed by administrators in the Firebase Console.
+//
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Check if the authenticated user's verified token email matches the requested document
+    function isEmailOwner(emailDocId) {
+      return isAuthenticated() &&
+        request.auth.token.email != null &&
+        request.auth.token.email.lower() == emailDocId.lower();
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+
+    match /allowed_users/{emailDocId} {
+      // Authenticated users can ONLY fetch ('get') their own single whitelist record
+      // Listing or enumerating the collection is strictly forbidden
+      allow get: if isEmailOwner(emailDocId);
+      allow list: if false;
+      // Strictly deny client-side modifications (admin console only)
+      allow write: if false;
+    }
+
+    // Fallback: deny all other paths
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

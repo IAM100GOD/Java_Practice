@@ -1,7 +1,7 @@
-/* A13. Diagonal Difference (Accenture) */
+/* A13. Matrix Diagonal Difference (Accenture) */
 P.push({
-  id: 'acc-diagonal-diff', title: 'Diagonal Difference', level: 'easy', group: 'accenture', file: 'DiagonalDifference.java', dir: 'AccentureQuestions',
-  statement: 'Given an N \u00d7 N matrix, return the absolute difference between the sum of the primary diagonal (top-left \u2192 bottom-right) and the secondary diagonal (top-right \u2192 bottom-left). Example: [[11, 2, 4], [4, 5, 6], [10, 8, \u221212]] \u2192 |4 \u2212 19| = 15.',
+  id: 'acc-diagonal-diff', title: 'Matrix Diagonal Difference', level: 'easy', group: 'accenture', file: 'DiagonalDifference.java', dir: 'AccentureQuestions',
+  statement: 'Given a square matrix of size N \u00d7 N, calculate the absolute difference between the sums of its diagonals (primary diagonal and secondary diagonal). Sample Test Case: [[11, 2, 4], [4, 5, 6], [10, 8, \u221212]] \u2192 Primary: 11 + 5 + (\u221212) = 4, Secondary: 4 + 5 + 10 = 19 \u2192 |4 \u2212 19| = 15.',
   technique: 'Single loop: [i][i] and [i][n\u22121\u2212i]', time: 'O(N)', space: 'O(1)',
   inputs: [{ key: 'm', label: 'matrix (one row per line or ; separated)', def: '11, 2, 4; 4, 5, 6; 10, 8, -12' }],
   samples: [['11, 2, 4; 4, 5, 6; 10, 8, -12'], ['1, 2; 3, 4'], ['1, 2, 3, 4; 5, 6, 7, 8; 9, 10, 11, 12; 13, 14, 15, 16'], ['7']],
