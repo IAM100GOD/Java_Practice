@@ -22,6 +22,13 @@
   let consecutiveFailedAttempts = 0;
   let lockoutUntil = 0;
 
+  // Track initial authentication check from IndexedDB/Firebase
+  let authInitialized = false;
+  let authResolve;
+  const authReadyPromise = new Promise((resolve) => {
+    authResolve = resolve;
+  });
+
   function setBtnLoading(isLoading, customText) {
     const btn = document.getElementById('landingLoginBtn');
     if (!btn) return;
@@ -76,22 +83,45 @@
       return;
     }
 
+    const auth = firebase.auth();
+
+    // 1. Wait for initial auth state if it's still resolving from storage
+    if (!authInitialized) {
+      setBtnLoading(true, 'Checking session...');
+      await authReadyPromise;
+    }
+
+    // 2. CHECK IF ALREADY SIGNED IN:
+    // If the user already has an active session, verify whitelist and enter directly without popup!
+    const currentUser = auth.currentUser;
+    if (currentUser && currentUser.email) {
+      setBtnLoading(true, 'Verifying...');
+      const isAllowed = await checkFirestoreWhitelist(currentUser);
+      if (isAllowed) {
+        setBtnLoading(false);
+        updateAuthState(currentUser);
+        return; // Already signed in: NO POPUP!
+      }
+    }
+
+    // 3. ONLY IF NOT SIGNED IN: Proceed to OAuth account selection popup
     const now = Date.now();
-    // 1. Check active lockout
+    // Check active lockout
     if (lockoutUntil > now) {
       const remainingSecs = Math.ceil((lockoutUntil - now) / 1000);
       alert(`Too many unauthorized sign-in attempts.\nPlease wait ${remainingSecs} seconds before trying again.`);
+      setBtnLoading(false);
       return;
     }
 
-    // 2. Anti-spam throttle (minimum 3 seconds between clicks)
+    // Anti-spam throttle (minimum 3 seconds between clicks)
     if (now - lastAttemptTime < 3000) {
+      setBtnLoading(false);
       return;
     }
     lastAttemptTime = now;
 
-    setBtnLoading(true);
-    const auth = firebase.auth();
+    setBtnLoading(true, 'Connecting...');
     const provider = new firebase.auth.GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
 
@@ -202,11 +232,13 @@
   setInterval(checkForUpdates, 60000);
 
   function updateAuthState(user) {
+    const authLoading = document.getElementById('authLoading');
     const defaultLanding = document.getElementById('defaultLanding');
     const stepperApp = document.getElementById('stepperApp');
     const userEmailBadge = document.getElementById('userEmailBadge');
     const landingLoginBtn = document.getElementById('landingLoginBtn');
 
+    if (authLoading) authLoading.style.display = 'none';
     setBtnLoading(false);
 
     if (user && user.email) {
@@ -227,6 +259,10 @@
   // Safe listener: verifies whitelist from Firestore on startup
   if (typeof firebase !== 'undefined' && firebase.auth) {
     firebase.auth().onAuthStateChanged(async (user) => {
+      if (!authInitialized) {
+        authInitialized = true;
+        if (authResolve) authResolve(user);
+      }
       if (user) {
         const isAllowed = await checkFirestoreWhitelist(user);
         if (isAllowed) {
@@ -245,4 +281,20 @@
       }
     });
   }
+
+  // Safety fallback: dismiss authLoading overlay after 4 seconds if network/Firebase is unresponsive
+  setTimeout(() => {
+    if (!authInitialized) {
+      authInitialized = true;
+      if (authResolve) authResolve(null);
+    }
+    const loading = document.getElementById('authLoading');
+    if (loading && loading.style.display !== 'none') {
+      loading.style.display = 'none';
+      if (!firebase.auth || !firebase.auth().currentUser) {
+        const landing = document.getElementById('defaultLanding');
+        if (landing) landing.style.display = 'block';
+      }
+    }
+  }, 4000);
 })();

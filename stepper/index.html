@@ -19,8 +19,14 @@ if (location.protocol === 'http:' && location.hostname !== 'localhost' && locati
 </head>
 <body>
 
+<!-- Initial auth verification overlay: avoids flashing landing page if already signed in -->
+<div id="authLoading">
+  <div class="spinner"></div>
+  <div style="font-family:var(--f-ui);font-size:.9rem;color:var(--muted);font-weight:500;">Checking authorization...</div>
+</div>
+
 <!-- ==================== DEFAULT PUBLIC VIEW (codecoriander.com) ==================== -->
-<div id="defaultLanding">
+<div id="defaultLanding" style="display:none;">
   <nav class="landing-nav">
     <a href="/" class="landing-brand">
       <img src="img/logo.svg" alt="Code Coriander Logo" class="brand-logo" width="45" height="30" style="height:30px;width:auto;max-width:50px;object-fit:contain;vertical-align:middle;display:inline-block;flex-shrink:0;">
