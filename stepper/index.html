@@ -11,7 +11,7 @@ if (location.protocol === 'http:' && location.hostname !== 'localhost' && locati
 </script>
 <link rel="icon" type="image/svg+xml" href="img/logo.svg">
 <link rel="alternate icon" type="image/png" href="favicon.png">
-<link rel="stylesheet" href="css/stepper.css?v=6">
+<link rel="stylesheet" href="css/stepper.css?v=7">
 <!-- Firebase App, Auth & Firestore SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
@@ -24,6 +24,20 @@ if (location.protocol === 'http:' && location.hostname !== 'localhost' && locati
   <div class="spinner"></div>
   <div style="font-family:var(--f-ui);font-size:.9rem;color:var(--muted);font-weight:500;">Checking authorization...</div>
 </div>
+<script>
+  /* Fail-safe watchdog: guarantee authLoading is dismissed even if external CDNs stall */
+  setTimeout(function() {
+    var loading = document.getElementById('authLoading');
+    if (loading && loading.style.display !== 'none') {
+      var stepper = document.getElementById('stepperApp');
+      if (!stepper || stepper.style.display !== 'grid') {
+        loading.style.display = 'none';
+        var landing = document.getElementById('defaultLanding');
+        if (landing) landing.style.display = 'block';
+      }
+    }
+  }, 4500);
+</script>
 
 <!-- ==================== DEFAULT PUBLIC VIEW (codecoriander.com) ==================== -->
 <div id="defaultLanding" style="display:none;">
@@ -136,7 +150,7 @@ if (location.protocol === 'http:' && location.hostname !== 'localhost' && locati
 
 <!-- ==================== SCRIPTS ==================== -->
 <!-- Workbench scripts are lazy-loaded by auth.js after an authorized sign-in -->
-<script src="js/auth.js?v=7"></script>
+<script src="js/auth.js?v=8"></script>
 
 </body>
 </html>

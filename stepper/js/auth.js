@@ -47,29 +47,48 @@
   /**
    * Check if the authenticated user exists in the Firestore 'allowed_users' whitelist collection.
    * Access is secured at the database layer via Firestore Security Rules (get only, no listing).
+   * Returns: 'ALLOWED' | 'FORBIDDEN' | 'ERROR'
    */
   async function checkFirestoreWhitelist(user) {
-    if (!user || !user.email) return false;
+    if (!user || !user.email) return 'FORBIDDEN';
     if (typeof firebase === 'undefined' || !firebase.firestore) {
-      console.error("Firestore SDK not available for whitelist verification.");
-      return false;
+      console.warn("Firestore SDK not available for whitelist verification.");
+      return 'ERROR';
     }
     try {
+      // 1. Ensure auth token is valid and fresh before querying Firestore (prevents hanging on stale tokens)
+      try {
+        const tokenPromise = user.getIdToken(/* forceRefresh */ false);
+        const tokenTimeout = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Token refresh timeout')), 3500)
+        );
+        await Promise.race([tokenPromise, tokenTimeout]);
+      } catch (tokErr) {
+        console.warn("Token check warning:", tokErr);
+      }
+
+      // 2. Query Firestore with a strict 4-second timeout so docRef.get() can never hang indefinitely
       const db = firebase.firestore();
       const emailKey = user.email.toLowerCase().trim();
       const docRef = db.collection('allowed_users').doc(emailKey);
-      const snap = await docRef.get();
-      if (snap.exists) {
+
+      const fetchPromise = docRef.get();
+      const fetchTimeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Firestore read timeout')), 4000)
+      );
+      const snap = await Promise.race([fetchPromise, fetchTimeout]);
+
+      if (snap && snap.exists) {
         const data = snap.data() || {};
         if (data.active !== undefined && !data.active) {
-          return false;
+          return 'FORBIDDEN';
         }
-        return true;
+        return 'ALLOWED';
       }
-      return false;
+      return 'FORBIDDEN';
     } catch (err) {
       console.warn("Firestore whitelist check query notice:", err);
-      return false;
+      return 'ERROR';
     }
   }
 
@@ -96,8 +115,8 @@
     const currentUser = auth.currentUser;
     if (currentUser && currentUser.email) {
       setBtnLoading(true, 'Verifying...');
-      const isAllowed = await checkFirestoreWhitelist(currentUser);
-      if (isAllowed) {
+      const status = await checkFirestoreWhitelist(currentUser);
+      if (status === 'ALLOWED') {
         setBtnLoading(false);
         updateAuthState(currentUser);
         return; // Already signed in: NO POPUP!
@@ -128,12 +147,12 @@
     try {
       const result = await auth.signInWithPopup(provider);
       const user = result.user;
-      const isAllowed = await checkFirestoreWhitelist(user);
+      const status = await checkFirestoreWhitelist(user);
 
-      if (isAllowed) {
+      if (status === 'ALLOWED') {
         consecutiveFailedAttempts = 0;
         updateAuthState(user);
-      } else {
+      } else if (status === 'FORBIDDEN') {
         consecutiveFailedAttempts += 1;
         const selectedEmail = (user && user.email) ? user.email : "Selected account";
 
@@ -152,6 +171,11 @@
         }
 
         setBtnLoading(false);
+        updateAuthState(null);
+      } else {
+        // 'ERROR' (network timeout or offline)
+        setBtnLoading(false);
+        alert("Unable to verify authorization due to a network connection timeout. Please check your internet connection and try again.");
         updateAuthState(null);
       }
     } catch (err) {
@@ -264,16 +288,20 @@
         if (authResolve) authResolve(user);
       }
       if (user) {
-        const isAllowed = await checkFirestoreWhitelist(user);
-        if (isAllowed) {
+        const status = await checkFirestoreWhitelist(user);
+        if (status === 'ALLOWED') {
           updateAuthState(user);
-        } else {
+        } else if (status === 'FORBIDDEN') {
           // If non-whitelisted session found, purge and clear silently
           try {
             await user.delete();
           } catch (e) {
             await firebase.auth().signOut();
           }
+          updateAuthState(null);
+        } else {
+          // 'ERROR' (network timeout or offline)
+          // Do not delete user session on network interruption; gracefully show landing view
           updateAuthState(null);
         }
       } else {
@@ -291,7 +319,8 @@
     const loading = document.getElementById('authLoading');
     if (loading && loading.style.display !== 'none') {
       loading.style.display = 'none';
-      if (!firebase.auth || !firebase.auth().currentUser) {
+      const stepper = document.getElementById('stepperApp');
+      if (!stepper || stepper.style.display !== 'grid') {
         const landing = document.getElementById('defaultLanding');
         if (landing) landing.style.display = 'block';
       }
