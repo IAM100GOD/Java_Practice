@@ -26,6 +26,7 @@ window.PROBLEM_FILES = [
   "problems/AccentureQuestions/acc-second-even-odd.js",
   "problems/AccentureQuestions/acc-smallest-pair.js",
   "problems/AccentureQuestions/acc-toggle-bits.js",
+  "problems/accenture/lateral/acc-pivot-index.js",
   "problems/scaler/adv_dsa_1/arrays_3/spiral-matrix.js",
   "problems/scaler/adv_dsa_1/bit_manipulations_1/different-bits-sum.js",
   "problems/scaler/adv_dsa_1/bit_manipulations_2/count-total-set-bits.js",
